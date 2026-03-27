@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>🍹 Бар для коллег</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .drink-card {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .drink-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 16px;
+            border-left: 4px solid #667eea;
+            padding-left: 12px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #4a5568;
+            margin: 12px 0 8px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ingredients {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .ingredient-tag {
+            background: #edf2f7;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .instruction {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .stats {
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>
+            <span>🍹</span>
+            Бар для коллег
+        </h1>
+        <div class="subtitle">Найди идеальный напиток или открой что-то новое</div>
+
+        <div class="button-group">
+            <button onclick="getRandomDrink()">🎲 Случайный</button>
+            <button onclick="showAllDrinks()">📋 Все напитки</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="ingredientInput" placeholder="🔍 Поиск по ингредиенту (ром, мята...)"
+                   onkeypress="if(event.key === 'Enter') searchByIngredient()">
+            <button onclick="searchByIngredient()">Найти</button>
+        </div>
+    </div>
+
+    <div id="result"></div>
+    <div id="stats" class="stats"></div>
+</div>
+
+<script>
+    async function getRandomDrink() {
+        showLoading();
+        try {
+            const response = await fetch('/api/random');
+            const data = await response.json();
+
+            if (data.error) {
+                showError(data.error);
+            } else {
+                showDrink(data);
+            }
+        } catch (error) {
+            showError('Ошибка загрузки: ' + error.message);
+        }
+    }
+
+    async function showAllDrinks() {
+        showLoading();
+        try {
+            const response = await fetch('/api/all');
+            const drinks = await response.json();
+
+            if (drinks.length === 0) {
+                showError('Нет напитков');
+            } else {
+                let html = '<div class="card">';
+                html += '<h3 style="margin-bottom: 16px;">📋 Все напитки (' + drinks.length + ')</h3>';
+                drinks.forEach(drink => {
+                    html += `
+                        <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                            <div style="font-weight: 700; font-size: 18px; color: #2d3748;">🍸 ${drink.name}</div>
+                            <div style="font-size: 13px; color: #718096; margin-top: 6px;">
+                                Ингредиенты: ${drink.ingredients.join(', ')}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('result').innerHTML = html;
+            }
+        } catch (error) {
+            showError('Ошибка загрузки: ' + error.message);
+        }
+    }
+
+    async function searchByIngredient() {
+        const ingredient = document.getElementById('ingredientInput').value.trim();
+        if (!ingredient) {
+            showError('Введите ингредиент для поиска');
+            return;
+        }
+
+        showLoading();
+        try {
+            const response = await fetch(`/api/search?ingredient=${encodeURIComponent(ingredient)}`);
+            const drinks = await response.json();
+
+            if (drinks.length === 0) {
+                showError('Ничего не найдено для "' + ingredient + '"');
+            } else {
+                let html = '<div class="card">';
+                html += `<h3 style="margin-bottom: 16px;">🔍 Найдено ${drinks.length} напитков с "${ingredient}"</h3>`;
+                drinks.forEach(drink => {
+                    html += `
+                        <div onclick='showDrinkDetails(${JSON.stringify(drink)})'
+                             style="margin-bottom: 12px; padding: 12px; background: #f7fafc; border-radius: 12px; cursor: pointer;">
+                            <div style="font-weight: 600;">🍸 ${drink.name}</div>
+                            <div style="font-size: 12px; color: #718096;">${drink.ingredients.slice(0, 3).join(', ')}${drink.ingredients.length > 3 ? '...' : ''}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('result').innerHTML = html;
+            }
+        } catch (error) {
+            showError('Ошибка поиска: ' + error.message);
+        }
+    }
+
+    function showDrink(drink) {
+        const html = `
+            <div class="drink-card">
+                <div class="drink-name">🍸 ${drink.name}</div>
+                <div class="section-title">📝 Ингредиенты</div>
+                <div class="ingredients">
+                    ${drink.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                </div>
+                <div class="section-title">👨‍🍳 Приготовление</div>
+                <div class="instruction">${drink.instruction}</div>
+            </div>
+        `;
+        document.getElementById('result').innerHTML = html;
+    }
+
+    function showDrinkDetails(drink) {
+        showDrink(drink);
+    }
+
+    function showLoading() {
+        document.getElementById('result').innerHTML = '<div class="loading">⏳ Загрузка...</div>';
+    }
+
+    function showError(message) {
+        document.getElementById('result').innerHTML = `<div class="error">⚠️ ${message}</div>`;
+    }
+
+    // Загружаем статистику при старте
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const stats = await response.json();
+            document.getElementById('stats').innerHTML = `🍹 ${stats.total} рецептов готовы к использованию`;
+        } catch (error) {
+            console.error('Stats error:', error);
+        }
+    }
+
+    // Показываем случайный напиток при загрузке
+    loadStats();
+    getRandomDrink();
+</script>
+</body>
+</html>
