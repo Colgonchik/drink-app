@@ -12,8 +12,8 @@ COPY src src
 # Собираем fat JAR
 RUN gradle clean build --no-daemon
 
-# Второй этап: запуск приложения
-FROM openjdk:21-slim
+# Второй этап: запуск приложения (используем Eclipse Temurin)
+FROM eclipse-temurin:21-jre-slim
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
