@@ -7,10 +7,11 @@ COPY gradle gradle
 COPY src src
 RUN gradle clean build --no-daemon
 
-# Запуск — используем правильный образ Temurin
+# Запуск
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
-COPY --from=builder /app/build/libs/drink-app-all.jar /app/app.jar
+COPY --from=builder /app/build/libs/drink-app-1.0.0.jar /app/app.jar
+
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
