@@ -2,7 +2,7 @@
 FROM gradle:8.5-jdk21 AS builder
 
 # Ограничиваем аппетит Gradle (Render на бесплатных тарифах дает мало RAM)
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs='-Xmx512m'"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.jvmargs='-Xmx256m'"
 
 WORKDIR /app
 
