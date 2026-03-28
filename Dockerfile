@@ -1,12 +1,27 @@
+# 1. Сборка
 FROM gradle:8.5-jdk21 AS builder
-WORKDIR /app
-COPY . .
-RUN chmod +x gradlew
-RUN ./gradlew clean shadowJar --no-daemon --stacktrace
 
-FROM eclipse-temurin:21-jre
+# Ограничиваем аппетит Gradle (Render на бесплатных тарифах дает мало RAM)
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs='-Xmx512m'"
+
 WORKDIR /app
-# Плагин shadow положит файл в build/libs/
+
+# Копируем всё сразу (так надежнее, если структура папок сложная)
+COPY . .
+
+# Даем права и собираем именно shadowJar
+RUN chmod +x gradlew && ./gradlew clean shadowJar --no-daemon
+
+# 2. Запуск
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+# Копируем только собранный JAR из первой стадии
+# Используем маску *-all.jar, так как shadowJar создает именно такой файл
 COPY --from=builder /app/build/libs/*-all.jar app.jar
+
 EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+
+# Запускаем через ENTRYPOINT, это надежнее для прокидывания сигналов остановки
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]
