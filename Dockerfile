@@ -2,10 +2,9 @@
 FROM gradle:8.5-jdk21 AS builder
 
 WORKDIR /app
-COPY build.gradle.kts settings.gradle.kts gradle.properties ./
-COPY gradle gradle
-COPY src src
-RUN gradle clean build -x test --no-daemon
+COPY . .
+RUN ./gradlew clean build -x test --no-daemon
+
 
 # Запуск
 FROM eclipse-temurin:21-jre
