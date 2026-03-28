@@ -2,20 +2,17 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.9.20"
-    java
-    id("application")
+    id("io.ktor.plugin") version "2.3.12" // Специальный плагин Ktor (рекомендуется)
     id("com.github.johnrengelman.shadow") version "8.1.1"
-
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+    application
 }
 
 group = "com.drinkapp"
 version = "1.0.0"
+
+application {
+    mainClass.set("com.drinkapp.ApplicationKt")
+}
 
 repositories {
     mavenCentral()
@@ -23,41 +20,24 @@ repositories {
 
 dependencies {
     val ktor_version = "2.3.12"
-
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
-
-    // Этот модуль нужен для CallLogging (иногда его забывают)
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
-
-    // Эти два модуля нужны для ContentNegotiation и Jackson
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-jackson:$ktor_version")
-
-    // Логирование (Logback) обязательно должно быть, иначе сервер упадет при старте
-    implementation("ch.qos.logback:logback-classic:1.4.14")
-
-    // Для работы static и files в 2.x
     implementation("io.ktor:ktor-server-host-common:$ktor_version")
-
+    implementation("ch.qos.logback:logback-classic:1.4.14")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
 }
 
-application {
-    mainClass.set("com.drinkapp.ApplicationKt")
+kotlin {
+    jvmToolchain(21)
 }
 
-tasks.withType<KotlinCompile> {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+tasks {
+    shadowJar {
+        archiveClassifier.set("all")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        mergeServiceFiles() // Критически важно для Ktor
     }
 }
-
-//tasks.jar {
-//    manifest {
-//        attributes["Main-Class"] = "com.drinkapp.ApplicationKt"
-//    }
-//    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-//    // Убираем пока сборку "толстого" JAR, чтобы проверить компиляцию
-//}
-
