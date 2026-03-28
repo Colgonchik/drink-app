@@ -2,17 +2,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.9.20"
-    id("io.ktor.plugin") version "2.3.12" // Специальный плагин Ktor (рекомендуется)
+    id("application")
+    // Добавляем плагин ShadowJar
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    application
 }
 
 group = "com.drinkapp"
 version = "1.0.0"
-
-application {
-    mainClass.set("com.drinkapp.ApplicationKt")
-}
 
 repositories {
     mavenCentral()
@@ -20,6 +16,7 @@ repositories {
 
 dependencies {
     val ktor_version = "2.3.12"
+
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
@@ -30,14 +27,40 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
 }
 
-kotlin {
-    jvmToolchain(21)
+application {
+    // Убедись, что путь к классу совпадает с твоим пакетом!
+    mainClass.set("com.drinkapp.ApplicationKt")
 }
 
 tasks {
-    shadowJar {
-        archiveClassifier.set("all")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        mergeServiceFiles() // Критически важно для Ktor
+    // Настройка компиляции под Java 21
+    withType<KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "21"
+        }
     }
+
+    // Настройка самого ShadowJar
+    shadowJar {
+        archiveClassifier.set("all") // Создаст файл с окончанием -all.jar
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+        // Это объединяет служебные файлы (важно для работы логов и Ktor)
+        mergeServiceFiles()
+
+        // Исключаем подписи зависимостей, чтобы JAR не выдавал ошибку безопасности
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+    }
+}
+
+// Отключаем обычный jar, чтобы не путаться (опционально)
+tasks.jar {
+    enabled = false
+}
+
+// Привязываем сборку shadow к обычному build
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
