@@ -1,27 +1,20 @@
-# 1. Сборка
-FROM gradle:8.5-jdk21 AS builder
-
-# Ограничиваем аппетит Gradle (Render на бесплатных тарифах дает мало RAM)
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.jvmargs='-Xmx256m'"
-
+FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 
-# Копируем всё сразу (так надежнее, если структура папок сложная)
-COPY . .
+# Копируем только файлы сборки сначала (для кэша)
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle.kts settings.gradle.kts gradle.properties ./
+COPY src src
 
-# Даем права и собираем именно shadowJar
-RUN chmod +x gradlew && ./gradlew clean shadowJar --no-daemon
+# Даем права и запускаем сборку с МИНИМАЛЬНЫМ потреблением памяти
+RUN chmod +x gradlew && \
+    ./gradlew shadowJar --no-daemon -Dorg.gradle.jvmargs="-Xmx256m -XX:MaxMetaspaceSize=128m"
 
-# 2. Запуск
-FROM eclipse-temurin:21-jre
-
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-
-# Копируем только собранный JAR из первой стадии
-# Используем маску *-all.jar, так как shadowJar создает именно такой файл
 COPY --from=builder /app/build/libs/*-all.jar app.jar
 
 EXPOSE 8080
-
-# Запускаем через ENTRYPOINT, это надежнее для прокидывания сигналов остановки
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]
+# Запуск тоже с лимитом, чтобы Render не прибил процесс
+CMD ["java", "-Xmx300m", "-jar", "app.jar"]
