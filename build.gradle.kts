@@ -56,13 +56,6 @@ tasks.jar {
         attributes["Main-Class"] = "com.drinkapp.ApplicationKt"
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // Используем конфигурацию только в момент выполнения задачи
-    val runtimeClasspath = configurations.runtimeClasspath
-    from({
-        runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-    })
-
-    // Исключаем подписи зависимостей, которые ломают JAR
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    // Убираем пока сборку "толстого" JAR, чтобы проверить компиляцию
 }
+
