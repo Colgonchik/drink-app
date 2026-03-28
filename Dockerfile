@@ -3,7 +3,8 @@ FROM gradle:8.5-jdk21 AS builder
 
 WORKDIR /app
 COPY . .
-RUN ./gradlew clean build -x test --no-daemon
+RUN ./gradlew clean build -x test --no-daemon --stacktrace
+
 
 
 # Запуск
