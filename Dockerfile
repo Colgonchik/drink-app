@@ -1,17 +1,16 @@
-# Сборка
 FROM gradle:8.5-jdk21 AS builder
-
 WORKDIR /app
+# Копируем ВООБЩЕ ВСЁ, чтобы точно ничего не забыть
 COPY . .
-RUN ./gradlew clean build -x test --no-daemon --stacktrace
+# Даем права (на всякий случай) и собираем
+RUN ./gradlew clean shadowJar --no-daemon
 
 
-
-# Запуск
 FROM eclipse-temurin:21-jre
-
 WORKDIR /app
-COPY --from=builder /app/build/libs/drink-app-1.0.0.jar /app/app.jar
+# Используем маску *.jar, чтобы не гадать с именем и версией
+COPY --from=builder /app/build/libs/*-all.jar app.jar
+
 
 EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
