@@ -243,7 +243,7 @@
         const token = localStorage.getItem('authToken');
         if (!token) { staffLogin(); return; }
 
-        document.getElementById('result').innerHTML = '<div class="loading">⏳ Загрузка...</div>';
+        document.getElementById('result').innerHTML = '<div class="loading">⏳ Загрузка раскладок...</div>';
 
         try {
             const res = await fetch('/api/recipes', {
@@ -257,14 +257,30 @@
             }
 
             const recipes = await res.json();
-            let html = `<div class="card"><h3>📋 Раскладки</h3>`;
+            let html = `<div class="card">
+                <h3 style="margin-bottom: 16px;">📋 Раскладки коктейлей</h3>
+                <div class="subtitle">Только для сотрудников</div>`;
 
             recipes.forEach(d => {
                 html += `
-                    <div style="margin:12px 0;padding:12px;background:#f7fafc;border-radius:12px;">
-                        <div style="font-weight:700">🍸 ${d.name}</div>
-                        <div style="font-size:14px;color:#666">📝 ${d.ingredients.join(', ')}</div>
-                    </div>`;
+                    <div style="margin: 16px 0; padding: 16px; background: #f7fafc; border-radius: 12px; border-left: 4px solid #667eea;">
+                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 12px; color: #2d3748;">🍸 ${d.name}</div>
+                        <div style="font-size: 14px; color: #4a5568; line-height: 1.8;">`;
+
+                //Показываем ингредиенты с граммовками построчно
+                if (d.measurements && d.measurements.length > 0) {
+                    d.ingredients.forEach((ing, index) => {
+                        const measurement = d.measurements[index] || '—';
+                        html += `<div> ${ing} — <strong style="color: #667eea;">${measurement}</strong></div>`;
+                    });
+                } else {
+                    // Если граммовок нет — показываем только ингредиенты
+                    d.ingredients.forEach(ing => {
+                        html += `<div> ${ing}</div>`;
+                    });
+                }
+
+                html += `</div></div>`;
             });
             html += '</div>';
             document.getElementById('result').innerHTML = html;

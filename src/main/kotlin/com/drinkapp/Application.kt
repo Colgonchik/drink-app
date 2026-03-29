@@ -88,6 +88,7 @@ fun Application.module() {
                 mapOf(
                     "name" to drink.name,
                     "ingredients" to drink.ingredients,
+                    "measurements" to drink.measurements
                 )
             }
             call.respond(recipes)
