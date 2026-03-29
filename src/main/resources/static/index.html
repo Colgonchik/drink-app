@@ -199,6 +199,7 @@
         <div class="button-group">
             <button onclick="getRandomDrink()">🎲 Случайный</button>
             <button onclick="showAllDrinks()">📋 Все напитки</button>
+            <button onclick="staffLogin()" style="background: #9f7aea;">🔐 Раскладки</button>
         </div>
 
         <div class="search-box">
@@ -213,6 +214,67 @@
 </div>
 
 <script>
+        // 🔐 Простая авторизация
+    async function staffLogin() {
+        const password = prompt('🔐 Введите пароль:');
+        if (!password) return;
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                localStorage.setItem('authToken', data.token);
+                showRecipes();
+            } else {
+                alert('❌ ' + data.error);
+            }
+        } catch (e) {
+            alert('⚠️ Ошибка: ' + e.message);
+        }
+    }
+
+    // 📋 Показать раскладки
+    async function showRecipes() {
+        const token = localStorage.getItem('authToken');
+        if (!token) { staffLogin(); return; }
+
+        document.getElementById('result').innerHTML = '<div class="loading">⏳ Загрузка...</div>';
+
+        try {
+            const res = await fetch('/api/recipes', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem('authToken');
+                alert('🔐 Доступ запрещён');
+                return;
+            }
+
+            const recipes = await res.json();
+            let html = `<div class="card"><h3>📋 Раскладки</h3>`;
+
+            recipes.forEach(d => {
+                html += `
+                    <div style="margin:12px 0;padding:12px;background:#f7fafc;border-radius:12px;">
+                        <div style="font-weight:700">🍸 ${d.name}</div>
+                        <div style="font-size:14px;color:#666">📝 ${d.ingredients.join(', ')}</div>
+                        <div style="font-size:14px;color:#666">👨‍🍳 ${d.instruction}</div>
+                    </div>`;
+            });
+            html += '</div>';
+            document.getElementById('result').innerHTML = html;
+
+        } catch (e) {
+            document.getElementById('result').innerHTML = `<div class="error">⚠️ ${e.message}</div>`;
+        }
+    }
+
     async function getRandomDrink() {
         showLoading();
         try {

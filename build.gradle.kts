@@ -3,8 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.9.20"
     id("application")
-    // Добавляем плагин ShadowJar
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    java
 }
 
 group = "com.drinkapp"
@@ -12,6 +12,11 @@ version = "1.0.0"
 
 repositories {
     mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {
@@ -33,22 +38,23 @@ application {
 }
 
 tasks {
-    // Настройка компиляции под Java 21
+    // Синхронизируем Java и Kotlin под JVM 21
+    withType<JavaCompile> {
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
+    }
+
     withType<KotlinCompile> {
         kotlinOptions {
             jvmTarget = "21"
         }
     }
 
-    // Настройка самого ShadowJar
+    // Настройка ShadowJar (оставляем как было)
     shadowJar {
-        archiveClassifier.set("all") // Создаст файл с окончанием -all.jar
+        archiveClassifier.set("all")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-        // Это объединяет служебные файлы (важно для работы логов и Ktor)
         mergeServiceFiles()
-
-        // Исключаем подписи зависимостей, чтобы JAR не выдавал ошибку безопасности
         exclude("META-INF/*.SF")
         exclude("META-INF/*.DSA")
         exclude("META-INF/*.RSA")

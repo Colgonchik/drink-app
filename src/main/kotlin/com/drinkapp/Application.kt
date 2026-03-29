@@ -14,6 +14,8 @@ import io.ktor.server.http.content.* // НУЖЕН ДЛЯ static и files
 import io.ktor.server.plugins.callloging.CallLogging
 import org.slf4j.event.Level
 import java.io.File
+import com.drinkapp.LoginRequest
+import io.ktor.http.HttpStatusCode
 
 
 fun main() {
@@ -54,12 +56,42 @@ fun Application.module() {
         // Остальные ваши get("/") и т.д.
     }
 
-
     // API эндпоинты
     routing {
         // Главная страница
         get("/") {
             call.respondFile(File("src/main/resources/static/index.html"))
+        }
+
+        // Вход для сотрудников (простая проверка пароля)
+        post("/api/login") {
+            val staffPassword = System.getenv("STAFF_PASSWORD")
+            val request = call.receive<LoginRequest>()
+
+            if (request.password == staffPassword) {
+                call.respond(mapOf("token" to "staff-ok"))
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Неверный пароль"))
+            }
+        }
+
+// Защищённые раскладки
+        get("/api/recipes") {
+            val auth = call.request.headers["Authorization"]
+            if (auth?.contains("staff-ok") != true) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Требуется авторизация"))
+                return@get
+            }
+
+            // Возвращаем все рецепты из вашего хранилища
+            val recipes = storage.getAllDrinks().map { drink ->
+                mapOf(
+                    "name" to drink.name,
+                    "ingredients" to drink.ingredients,
+                    "instruction" to drink.instruction
+                )
+            }
+            call.respond(recipes)
         }
 
         // API: случайный напиток
