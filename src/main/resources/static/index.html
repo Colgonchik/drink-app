@@ -185,6 +185,21 @@
                 font-size: 14px;
             }
         }
+
+        /* Адаптив для телефонов (экраны уже 480px) */
+        @media (max-width: 480px) {
+            .search-box {
+                flex-wrap: wrap; /* Разрешаем перенос */
+            }
+
+            .search-box input {
+                flex: 1 1 100%; /* Растягиваем на всю ширину */
+            }
+
+            .search-box button {
+                flex: 1 1 100%; /* Кнопка тоже на всю ширину */
+            }
+        }
     </style>
 </head>
 <body>
@@ -238,12 +253,12 @@
         }
     }
 
-    // 📋 Показать раскладки
+    // Показать раскладки
     async function showRecipes() {
         const token = localStorage.getItem('authToken');
         if (!token) { staffLogin(); return; }
 
-        document.getElementById('result').innerHTML = '<div class="loading">⏳ Загрузка раскладок...</div>';
+        document.getElementById('result').innerHTML = '<div class="loading">⏳ Загрузка...</div>';
 
         try {
             const res = await fetch('/api/recipes', {
@@ -262,21 +277,29 @@
                 <div class="subtitle">Только для сотрудников</div>`;
 
             recipes.forEach(d => {
+                const ingredients = Array.isArray(d.ingredients) ? d.ingredients : [];
+                const measurements = Array.isArray(d.measurements) ? d.measurements : [];
+
                 html += `
                     <div style="margin: 16px 0; padding: 16px; background: #f7fafc; border-radius: 12px; border-left: 4px solid #667eea;">
-                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 12px; color: #2d3748;">🍸 ${d.name}</div>
-                        <div style="font-size: 14px; color: #4a5568; line-height: 1.8;">`;
+                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 12px;">🍸 ${d.name}</div>
 
-                //Показываем ингредиенты с граммовками построчно
-                if (d.measurements && d.measurements.length > 0) {
-                    d.ingredients.forEach((ing, index) => {
-                        const measurement = d.measurements[index] || '—';
-                        html += `<div> ${ing} — <strong style="color: #667eea;">${measurement}</strong></div>`;
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 12px; font-size: 13px;">
+                            <div><strong>🥄 Метод:</strong> ${d.method}</div>
+                            <div><strong>🍷 Бокал:</strong> ${d.glass}</div>
+                            <div><strong>🌿 Украшение:</strong> ${d.garnish}</div>
+                        </div>
+
+                        <div style="margin-top: 12px; font-size: 14px; line-height: 2;">`;
+
+                if (measurements.length > 0) {
+                    ingredients.forEach((ing, index) => {
+                        const measurement = measurements[index] || '—';
+                        html += `<div>📝 ${ing} — <strong style="color: #667eea;">${measurement}</strong></div>`;
                     });
                 } else {
-                    // Если граммовок нет — показываем только ингредиенты
-                    d.ingredients.forEach(ing => {
-                        html += `<div> ${ing}</div>`;
+                    ingredients.forEach(ing => {
+                        html += `<div>📝 ${ing}</div>`;
                     });
                 }
 
@@ -370,12 +393,31 @@
     }
 
     function showDrink(drink) {
+        // Преобразуем массив ингредиентов в список для display
+        const ingredients = Array.isArray(drink.ingredients) ? drink.ingredients : [];
+
         const html = `
             <div class="drink-card">
                 <div class="drink-name">🍸 ${drink.name}</div>
+
                 <div class="section-title">📝 Ингредиенты</div>
                 <div class="ingredients">
-                    ${drink.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                    ${ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px;">
+                    <div style="background: #f7fafc; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; text-transform: uppercase;">🥄 Метод</div>
+                        <div style="font-weight: 600; color: #2d3748;">${drink.method}</div>
+                    </div>
+                    <div style="background: #f7fafc; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; text-transform: uppercase;">🍷 Бокал</div>
+                        <div style="font-weight: 600; color: #2d3748;">${drink.glass}</div>
+                    </div>
+                    <div style="background: #f7fafc; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; text-transform: uppercase;">🌿 Украшение</div>
+                        <div style="font-weight: 600; color: #2d3748;">${drink.garnish}</div>
+                    </div>
                 </div>
             </div>
         `;

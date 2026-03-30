@@ -2,16 +2,24 @@
   {
     "name": "Aperol Spritz",
     "ingredients": ["Апероль", "Газ.вода", "Игристое"],
+    "method": "Билд",
+    "glass": "Винный",
+    "garnish": "Апельсин",
     "measurements": ["40 мл", "10 мл", "100 мл"]
   },
   {
     "name": "Americano",
     "ingredients": ["Кампари", "Красный сладкий вермут", "Газ.вода"],
+    "method": "Билд",
+    "glass": "Рокс",
+    "garnish": "Цедра апельсина",
     "measurements": ["20 мл", "50 мл", "80 мл"]
   },
   {
     "name": "Angel Face",
     "ingredients": ["Кальвадос", "Джин", "Абрикосовый бренди"],
+    "method": "Стир",
+    "glass": "Шале",
     "measurements": ["30 мл", "30 мл", "30 мл"]
   }
 ]

@@ -88,6 +88,9 @@ fun Application.module() {
                 mapOf(
                     "name" to drink.name,
                     "ingredients" to drink.ingredients,
+                    "method" to drink.method,
+                    "glass" to drink.glass,
+                    "garnish" to drink.garnish,
                     "measurements" to drink.measurements
                 )
             }
@@ -101,6 +104,9 @@ fun Application.module() {
                 call.respond(mapOf(
                     "name" to drink.name,
                     "ingredients" to drink.ingredients,
+                    "method" to drink.method,
+                    "glass" to drink.glass,
+                    "garnish" to drink.garnish
                 ))
             } else {
                 call.respond(mapOf("error" to "Нет рецептов"))
