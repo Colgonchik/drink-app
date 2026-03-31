@@ -129,20 +129,35 @@ fun Application.module() {
 
         // API: поиск по ингредиенту
         get("/api/search") {
-            val ingredient = call.request.queryParameters["ingredient"]
-            if (ingredient.isNullOrBlank()) {
-                call.respond(mapOf("error" to "Укажите ингредиент"))
+            val query = call.request.queryParameters["q"] ?: call.request.queryParameters["ingredient"]
+
+            if (query.isNullOrBlank()) {
+                call.respond(mapOf("error" to "Введите название или ингредиент"))
                 return@get
             }
 
-            val found = storage.getDrinksByIngredient(ingredient)
+            val searchQuery = query.lowercase().trim()
+
+            // Ищем и по названию, и по ингредиентам
+            val found = storage.getAllDrinks().filter { drink ->
+                // Поиск по названию
+                drink.name.lowercase().contains(searchQuery) ||
+                        // Поиск по ингредиентам
+                        drink.ingredients.any { it.lowercase().contains(searchQuery) }
+            }
+
+            if (found.isEmpty()) {
+                call.respond(mapOf("error" to "Ничего не найдено по запросу \"$query\""))
+                return@get
+            }
+
             val result = found.map { drink ->
                 mapOf(
                     "name" to drink.name,
                     "ingredients" to drink.ingredients,
-                    "method" to drink.method,
-                    "glass" to drink.glass,
-                    "garnish" to drink.garnish
+                    "method" to (drink.method ?: "—"),
+                    "glass" to (drink.glass ?: "—"),
+                    "garnish" to (drink.garnish ?: "—")
                 )
             }
             call.respond(result)
