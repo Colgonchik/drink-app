@@ -119,6 +119,9 @@ fun Application.module() {
                 mapOf(
                     "name" to drink.name,
                     "ingredients" to drink.ingredients,
+                    "method" to drink.method,
+                    "glass" to drink.glass,
+                    "garnish" to drink.garnish
                 )
             }
             call.respond(drinks)
@@ -137,6 +140,9 @@ fun Application.module() {
                 mapOf(
                     "name" to drink.name,
                     "ingredients" to drink.ingredients,
+                    "method" to drink.method,
+                    "glass" to drink.glass,
+                    "garnish" to drink.garnish
                 )
             }
             call.respond(result)
